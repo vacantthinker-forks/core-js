@@ -1,4 +1,4 @@
-/* eslint-disable radix -- required for testing */
+/* eslint-disable radix, regexp/no-assertion-capturing-group, regexp/no-lazy-ends, regexp/no-useless-quantifier -- required for testing */
 var GLOBAL = Function('return this')();
 var WHITESPACES = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
   '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
@@ -14,7 +14,7 @@ var match, V8_VERSION;
 
 if (v8) {
   match = v8.split('.');
-  V8_VERSION = +(match[0] + match[1]);
+  V8_VERSION = match[0] < 4 ? 1 : +(match[0] + match[1]);
 } else if (USERAGENT) {
   match = USERAGENT.match(/Edge\/(\d+)/);
   if (!match || match[1] >= 74) {
@@ -33,19 +33,19 @@ var DESCRIPTORS_SUPPORT = function () {
 };
 
 var PROMISES_SUPPORT = function () {
-  var promise = Promise.resolve(1);
+  var promise = new Promise(function (resolve) { resolve(1); });
   var empty = function () { /* empty */ };
   var FakePromise = (promise.constructor = {})[Symbol.species] = function (exec) {
     exec(empty, empty);
   };
 
-  return (IS_NODE || typeof PromiseRejectionEvent == 'function')
-    && promise.then(empty) instanceof FakePromise
-    && V8_VERSION !== 66;
+  return promise.then(empty) instanceof FakePromise
+    && V8_VERSION !== 66
+    && (IS_NODE || typeof PromiseRejectionEvent == 'function');
 };
 
 var SYMBOLS_SUPPORT = function () {
-  return Symbol && (IS_NODE ? V8_VERSION !== 38 : !(V8_VERSION > 37 && V8_VERSION < 41));
+  return String(Symbol()) && !(V8_VERSION && V8_VERSION < 41);
 };
 
 var URL_AND_URL_SEARCH_PARAMS_SUPPORT = function () {
@@ -144,6 +144,12 @@ var TYPED_ARRAY_CONSTRUCTORS_NOT_REQUIRES_WRAPPERS = function () {
   return new Int8Array(iterable)[0] == 1
     && new Int8Array(new ArrayBuffer(2), 1, undefined).length == 1;
 };
+
+function NCG_SUPPORT() {
+  var re = RegExp('(?<a>b)');
+  return re.exec('b').groups.a === 'b' &&
+    'b'.replace(re, '$<a>c') === 'bc';
+}
 
 function createIsRegExpLogicTest(name) {
   return function () {
@@ -317,7 +323,7 @@ GLOBAL.tests = {
       return false;
     }
     try {
-      Array.prototype.join.call(null);
+      Array.prototype.join.call(null, '');
       return false;
     } catch (error) { /* empty */ }
     return true;
@@ -382,7 +388,33 @@ GLOBAL.tests = {
         [1, 2, 3].sort(null);
       } catch (error2) {
         [1, 2, 3].sort(undefined);
-        return true;
+
+        // stable sort
+        var array = [];
+        var result = '';
+        var code, chr, value, index;
+
+        // generate an array with more 512 elements (Chakra and old V8 fails only in this case)
+        for (code = 65; code < 76; code++) {
+          chr = String.fromCharCode(code);
+          switch (code) {
+            case 66: case 69: case 70: case 72: value = 3; break;
+            case 68: case 71: value = 4; break;
+            default: value = 2;
+          }
+          for (index = 0; index < 47; index++) {
+            array.push({ k: chr + index, v: value });
+          }
+        }
+
+        array.sort(function (a, b) { return b.v - a.v; });
+
+        for (index = 0; index < array.length; index++) {
+          chr = array[index].k.charAt(0);
+          if (result.charAt(result.length - 1) !== chr) result += chr;
+        }
+
+        return result === 'DGBEFHACIJK';
       }
     }
   },
@@ -422,8 +454,17 @@ GLOBAL.tests = {
     return new ArrayBuffer(2).slice(1, undefined).byteLength;
   }],
   'es.data-view': ARRAY_BUFFER_SUPPORT,
+  'es.date.get-year': function () {
+    return new Date(16e11).getYear() === 120;
+  },
   'es.date.now': function () {
     return Date.now;
+  },
+  'es.date.set-year': function () {
+    return Date.prototype.setYear;
+  },
+  'es.date.to-gmt-string': function () {
+    return Date.prototype.toGMTString;
   },
   'es.date.to-iso-string': function () {
     try {
@@ -441,6 +482,9 @@ GLOBAL.tests = {
   }],
   'es.date.to-string': function () {
     return new Date(NaN).toString() == 'Invalid Date';
+  },
+  'es.escape': function () {
+    return escape;
   },
   'es.function.bind': function () {
     return Function.prototype.bind;
@@ -744,7 +788,7 @@ GLOBAL.tests = {
   'es.reflect.to-string-tag': function () {
     return Reflect[Symbol.toStringTag];
   },
-  'es.regexp.constructor': function () {
+  'es.regexp.constructor': [NCG_SUPPORT, function () {
     var re1 = /a/g;
     var re2 = /a/g;
     re2[Symbol.match] = false;
@@ -753,9 +797,13 @@ GLOBAL.tests = {
       && RegExp(re2) !== re2
       && RegExp(re1, 'i') == '/a/i'
       && new RegExp('a', 'y') // just check that it doesn't throw
+      && RegExp('.', 's').exec('\n')
       && RegExp[Symbol.species];
+  }],
+  'es.regexp.dot-all': function () {
+    return RegExp('.', 's').dotAll;
   },
-  'es.regexp.exec': function () {
+  'es.regexp.exec': [NCG_SUPPORT, function () {
     var re1 = /a/;
     var re2 = /b*/g;
     var reSticky = new RegExp('a', 'y');
@@ -763,15 +811,16 @@ GLOBAL.tests = {
     re1.exec('a');
     re2.exec('a');
     return re1.lastIndex === 0 && re2.lastIndex === 0
-      // eslint-disable-next-line regexp/no-assertion-capturing-group, regexp/no-empty-group, regexp/no-lazy-ends -- required for testing
+      // eslint-disable-next-line regexp/no-empty-group -- required for testing
       && /()??/.exec('')[1] === undefined
       && reSticky.exec('abc')[0] === 'a'
       && reSticky.exec('abc') === null
       && (reSticky.lastIndex = 1, reSticky.exec('bac')[0] === 'a')
-      && (reStickyAnchored.lastIndex = 2, reStickyAnchored.exec('cba') === null);
-  },
+      && (reStickyAnchored.lastIndex = 2, reStickyAnchored.exec('cba') === null)
+      && RegExp('.', 's').exec('\n');
+  }],
   'es.regexp.flags': function () {
-    return /./g.flags === 'g' && new RegExp('a', 'y').flags === 'y';
+    return Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get.call({ dotAll: true, sticky: true }) === 'sy';
   },
   'es.regexp.sticky': function () {
     return new RegExp('a', 'y').sticky === true;
@@ -907,6 +956,9 @@ GLOBAL.tests = {
     return ''.split(O) == 7 && execCalled && result.length === 2 && result[0] === 'a' && result[1] === 'b';
   },
   'es.string.starts-with': createIsRegExpLogicTest('startsWith'),
+  'es.string.substr': function () {
+    return ''.substr;
+  },
   'es.string.trim': createStringTrimMethodTest('trim'),
   'es.string.trim-end': [createStringTrimMethodTest('trimEnd'), function () {
     return String.prototype.trimRight === String.prototype.trimEnd;
@@ -1039,7 +1091,29 @@ GLOBAL.tests = {
     return Int8Array.prototype.some;
   }],
   'es.typed-array.sort': [ARRAY_BUFFER_VIEWS_SUPPORT, function () {
-    return Int8Array.prototype.sort;
+    try {
+      new Uint16Array(1).sort(null);
+      new Uint16Array(1).sort({});
+      return false;
+    } catch (error) { /* empty */ }
+    // stable sort
+    var array = new Uint16Array(516);
+    var expected = Array(516);
+    var index, mod;
+
+    for (index = 0; index < 516; index++) {
+      mod = index % 4;
+      array[index] = 515 - index;
+      expected[index] = index - 2 * mod + 3;
+    }
+
+    array.sort(function (a, b) {
+      return (a / 4 | 0) - (b / 4 | 0);
+    });
+
+    for (index = 0; index < 516; index++) {
+      if (array[index] !== expected[index]) return;
+    } return true;
   }],
   'es.typed-array.subarray': [ARRAY_BUFFER_VIEWS_SUPPORT, function () {
     return Int8Array.prototype.subarray;
@@ -1054,6 +1128,9 @@ GLOBAL.tests = {
   'es.typed-array.to-string': [ARRAY_BUFFER_VIEWS_SUPPORT, function () {
     return Int8Array.prototype.toString == Array.prototype.toString;
   }],
+  'es.unescape': function () {
+    return unescape;
+  },
   'es.weak-map': [SAFE_ITERATION_CLOSING_SUPPORT, function () {
     var key = Object.freeze({});
     var called = 0;
@@ -1431,9 +1508,16 @@ GLOBAL.tests = {
   'esnext.symbol.dispose': function () {
     return Symbol.dispose;
   },
+  'esnext.symbol.matcher': function () {
+    return Symbol.matcher;
+  },
+  'esnext.symbol.metadata': function () {
+    return Symbol.metadata;
+  },
   'esnext.symbol.observable': function () {
     return Symbol.observable;
   },
+  // TODO: Remove from `core-js@4`
   'esnext.symbol.pattern-match': function () {
     return Symbol.patternMatch;
   },

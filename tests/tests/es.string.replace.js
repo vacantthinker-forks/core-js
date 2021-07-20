@@ -1,4 +1,4 @@
-/* eslint-disable regexp/no-unused-capturing-group -- required for testibg */
+/* eslint-disable regexp/no-super-linear-backtracking, regexp/no-unused-capturing-group -- required for testing */
 import { GLOBAL, NATIVE, STRICT } from '../helpers/constants';
 import { patchRegExp$exec } from '../helpers/helpers';
 
@@ -125,10 +125,12 @@ const run = assert => {
   assert.strictEqual('aaaaaaaaaa,aaaaaaaaaaaaaaa'.replace(/^(a+)\1*,\1+$/, '$1'), 'aaaaa', 'S15.5.4.11_A5_T1');
 
   // https://github.com/zloirock/core-js/issues/471
-  // eslint-disable-next-line regexp/no-useless-dollar-replacements -- required for testing
+  // eslint-disable-next-line regexp/no-useless-dollar-replacements, regexp/strict -- required for testing
   assert.strictEqual('{price} Retail'.replace(/{price}/g, '$25.00'), '$25.00 Retail');
   // eslint-disable-next-line regexp/prefer-escape-replacement-dollar-char -- required for testing
   assert.strictEqual('a'.replace(/(.)/, '$0'), '$0');
+
+  assert.throws(() => ''.replace.call(Symbol(), /./, ''), 'throws on symbol context');
 };
 
 QUnit.test('String#replace regression', run);

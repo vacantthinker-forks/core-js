@@ -1,7 +1,7 @@
 'use strict';
 const RESTRICTED_GLOBALS = require('confusing-browser-globals');
 const SUPPORTED_NODE_VERSIONS = require('core-js-builder/package').engines.node;
-const DEV_NODE_VERSIONS = '^10.17';
+const DEV_NODE_VERSIONS = '^14.15';
 
 function disable(rules) {
   return Object.keys(rules).reduce((memo, rule) => {
@@ -218,8 +218,12 @@ const base = {
   'eol-last': ['error', 'always'],
   // disallow space between function identifier and application
   'func-call-spacing': 'error',
-  // this option sets a specific tab width for your code
-  'indent-legacy': ['error', 2, { VariableDeclarator: 2, SwitchCase: 1 }],
+  // enforce consistent indentation
+  indent: ['error', 2, {
+    ignoredNodes: ['ConditionalExpression'],
+    SwitchCase: 1,
+    VariableDeclarator: 'first',
+  }],
   // require a space before & after certain keywords
   'keyword-spacing': ['error', { before: true, after: true }],
   // enforces spacing between keys and values in object literal properties
@@ -227,7 +231,7 @@ const base = {
   // enforce consistent linebreak style
   'linebreak-style': ['error', 'unix'],
   // specify the maximum length of a line in your program
-  'max-len': ['error', 120, 2],
+  'max-len': ['error', { code: 120, tabWidth: 2 }],
   // enforce a maximum depth that callbacks can be nested
   'max-nested-callbacks': ['error', 4],
   // specify the maximum number of statement allowed in a function
@@ -236,6 +240,8 @@ const base = {
   'new-cap': ['error', { newIsCap: true, capIsNew: false }],
   // require parentheses when invoking a constructor with no arguments
   'new-parens': 'error',
+  // disallow `if` as the only statement in an `else` block
+  'no-lonely-if': 'error',
   // disallow mixed spaces and tabs for indentation
   'no-mixed-spaces-and-tabs': 'error',
   // disallow multiple empty lines and only one newline at the end
@@ -250,6 +256,8 @@ const base = {
   'no-whitespace-before-property': 'error',
   // enforce the location of single-line statements
   'nonblock-statement-body-position': ['error', 'beside'],
+  // enforce consistent line breaks after opening and before closing braces
+  'object-curly-newline': ['error', { consistent: true }],
   // enforce spaces inside braces
   'object-curly-spacing': ['error', 'always'],
   // require newlines around variable declarations with initializations
@@ -274,7 +282,7 @@ const base = {
   'space-in-parens': 'error',
   // require spaces around operators
   'space-infix-ops': 'error',
-  // Require or disallow spaces before/after unary operators
+  // require or disallow spaces before/after unary operators
   'space-unary-ops': 'error',
   // require or disallow a space immediately following the // or /* in a comment
   'spaced-comment': ['error', 'always', { line: { exceptions: ['/'] }, block: { exceptions: ['*'] } }],
@@ -306,8 +314,6 @@ const base = {
   // node:
   // disallow deprecated APIs
   'node/no-deprecated-api': 'error',
-  // enforce the style of file extensions in `import` declarations
-  'node/file-extension-in-import': ['error', 'never'],
   // require require() calls to be placed at top-level module scope
   'node/global-require': 'error',
   // disallow the assignment to `exports`
@@ -348,6 +354,8 @@ const base = {
   'prefer-exponentiation-operator': 'error',
   // require template literals instead of string concatenation
   'prefer-template': 'error',
+  // disallow generator functions that do not have `yield`
+  'require-yield': 'error',
   // enforce spacing between rest and spread operators and their expressions
   'rest-spread-spacing': 'error',
   // require or disallow spacing around embedded expressions of template strings
@@ -357,8 +365,6 @@ const base = {
   strict: ['error', 'global'],
 
   // unicorn
-  // enforce the use of regex shorthands to improve readability
-  'unicorn/better-regex': 'error',
   // enforce a specific parameter name in catch clauses
   'unicorn/catch-error-name': ['error', { name: 'error', ignore: [/^err/] }],
   // enforce passing a message value when throwing a built-in error
@@ -377,7 +383,7 @@ const base = {
   'unicorn/no-console-spaces': 'error',
   // enforce the use of unicode escapes instead of hexadecimal escapes
   'unicorn/no-hex-escape': 'error',
-  // disallow if as the only statement in an else block
+  // disallow `if` statements as the only statement in `if` blocks without `else`
   'unicorn/no-lonely-if': 'error',
   // forbid classes that only have static members
   'unicorn/no-static-only-class': 'error',
@@ -397,18 +403,26 @@ const base = {
   'unicorn/prefer-string-slice': 'error',
   // prefer `switch` over multiple `else-if`
   'unicorn/prefer-switch': ['error', { minimumCases: 3 }],
+  // enforce using the separator argument with `Array#join()`
+  'unicorn/require-array-join-separator': 'error',
+  // enforce using the digits argument with `Number#toFixed()`
+  'unicorn/require-number-to-fixed-digits-argument': 'error',
+  // enforce using the `targetOrigin`` argument with `window.postMessage()`
+  'unicorn/require-post-message-target-origin': 'error',
 
   // sonarjs
-  // merging collapsible if statements increases the code's readability
-  'sonarjs/no-collapsible-if': 'error',
   // collection sizes and array length comparisons should make sense
   'sonarjs/no-collection-size-mischeck': 'error',
   // two branches in a conditional structure should not have exactly the same implementation
   'sonarjs/no-duplicated-branches': 'error',
   // collection elements should not be replaced unconditionally
   'sonarjs/no-element-overwrite': 'error',
+  // empty collections should not be accessed or iterated
+  'sonarjs/no-empty-collection': 'error',
   // function calls should not pass extra arguments
   'sonarjs/no-extra-arguments': 'error',
+  // goolean expressions should not be gratuitous
+  'sonarjs/no-gratuitous-expressions': 'error',
   // functions should not have identical implementations
   'sonarjs/no-identical-functions': 'error',
   // boolean checks should not be inverted
@@ -425,6 +439,8 @@ const base = {
   'sonarjs/no-unused-collection': 'error',
   // the output of functions that don't return anything should not be used
   'sonarjs/no-use-of-empty-return-value': 'error',
+  // non-existent operators '=+', '=-' and '=!' should not be used
+  'sonarjs/non-existent-operator': 'error',
   // local variables should not be declared and then immediately returned or thrown
   'sonarjs/prefer-immediate-return': 'error',
   // object literal syntax should be used
@@ -439,6 +455,8 @@ const base = {
   'regexp/confusing-quantifier': 'error',
   // enforce consistent escaping of control characters
   'regexp/control-character-escape': 'error',
+  // enforce consistent usage of hexadecimal escape
+  'regexp/hexadecimal-escape': ['error', 'never'],
   // enforce into your favorite case
   'regexp/letter-case': ['error', {
     caseInsensitive: 'lowercase',
@@ -453,7 +471,7 @@ const base = {
   // disallow duplicate characters in the RegExp character class
   'regexp/no-dupe-characters-character-class': 'error',
   // disallow duplicate disjunctions
-  'regexp/no-dupe-disjunctions': 'error',
+  'regexp/no-dupe-disjunctions': ['error', { report: 'all' }],
   // disallow alternatives without elements
   'regexp/no-empty-alternative': 'error',
   // disallow empty group
@@ -462,8 +480,6 @@ const base = {
   'regexp/no-empty-lookarounds-assertion': 'error',
   // disallow escape backspace `([\b])`
   'regexp/no-escape-backspace': 'error',
-  // enforce consistent usage of hexadecimal escape
-  'regexp/hexadecimal-escape': ['error', 'never'],
   // disallow invisible raw character
   'regexp/no-invisible-character': 'error',
   // disallow lazy quantifiers at the end of an expression
@@ -480,6 +496,10 @@ const base = {
   'regexp/no-optional-assertion': 'error',
   // disallow backreferences that reference a group that might not be matched
   'regexp/no-potentially-useless-backreference': 'error',
+  // disallow standalone backslashes
+  'regexp/no-standalone-backslash': 'error',
+  // disallow exponential and polynomial backtracking
+  'regexp/no-super-linear-backtracking': 'error',
   // disallow trivially nested assertions
   'regexp/no-trivially-nested-assertion': 'error',
   // disallow nested quantifiers that can be rewritten as one quantifier
@@ -504,10 +524,16 @@ const base = {
   'regexp/no-useless-non-capturing-group': 'error',
   // disallow unnecessary quantifier non-greedy (`?`)
   'regexp/no-useless-non-greedy': 'error',
+  // disallow quantifiers that can be removed
+  'regexp/no-useless-quantifier': 'error',
   // disallow unnecessary range of characters by using a hyphen
   'regexp/no-useless-range': 'error',
   // disallow unnecessary `{n,m}`` quantifier
   'regexp/no-useless-two-nums-quantifier': 'error',
+  // disallow quantifiers with a maximum of zero
+  'regexp/no-zero-quantifier': 'error',
+  // require optimal quantifiers for concatenated quantifiers
+  'regexp/optimal-quantifier-concatenation': 'error',
   // disallow the alternatives of lookarounds that end with a non-constant quantifier
   'regexp/optimal-lookaround-quantifier': 'error',
   // enforces elements order in character class
@@ -538,8 +564,12 @@ const base = {
   'regexp/prefer-unicode-codepoint-escapes': 'error',
   // enforce using `\w`
   'regexp/prefer-w': 'error',
+  // sort alternatives if order doesn't matter
+  'regexp/sort-alternatives': 'error',
   // require regex flags to be sorted
   'regexp/sort-flags': 'error',
+  // disallow not strictly valid regular expressions
+  'regexp/strict': 'error',
   // enforce consistent usage of unicode escape or unicode codepoint escape
   'regexp/unicode-escape': 'error',
 
@@ -738,8 +768,6 @@ const transpiledAndPolyfilled = {
 };
 
 const nodePackages = {
-  // disallow unsupported ECMAScript syntax on the specified version
-  'node/no-unsupported-features/es-syntax': ['error', { version: SUPPORTED_NODE_VERSIONS }],
   // disallow unsupported ECMAScript built-ins on the specified version
   'node/no-unsupported-features/node-builtins': ['error', { version: SUPPORTED_NODE_VERSIONS }],
   ...disable(forbidES5BuiltIns),
@@ -755,18 +783,11 @@ const nodePackages = {
 };
 
 const nodeDev = {
-  // disallow unsupported ECMAScript syntax on the specified version
-  'node/no-unsupported-features/es-syntax': ['error', { version: DEV_NODE_VERSIONS }],
   // disallow unsupported ECMAScript built-ins on the specified version
   'node/no-unsupported-features/node-builtins': ['error', { version: DEV_NODE_VERSIONS }],
-  ...disable(forbidES5BuiltIns),
-  ...disable(forbidES2015BuiltIns),
-  ...disable(forbidES2016BuiltIns),
-  ...disable(forbidES2017BuiltIns),
-  ...disable(forbidES2018BuiltIns),
-  ...forbidES2019BuiltIns,
-  ...forbidES2020BuiltIns,
+  ...disable(forbidModernESBuiltIns),
   ...forbidES2021BuiltIns,
+  'es/no-weakrefs': 'off',
 };
 
 const tests = {
@@ -774,7 +795,7 @@ const tests = {
   // enforces return statements in callbacks of array's methods
   'array-callback-return': 'off',
   // specify the maximum length of a line in your program
-  'max-len': ['error', 180, 2],
+  'max-len': ['error', { code: 180, tabWidth: 2 }],
   // specify the maximum number of statement allowed in a function
   'max-statements': 'off',
   // disallow function declarations and expressions inside loop statements
@@ -860,10 +881,65 @@ const qunit = {
   'qunit/resolve-async': 'error',
 };
 
+const json = {
+  // enforce spacing inside array brackets
+  'jsonc/array-bracket-spacing': ['error', 'never'],
+  // disallow trailing commas in multiline object literals
+  'jsonc/comma-dangle': ['error', 'never'],
+  // enforce one true comma style
+  'jsonc/comma-style': ['error', 'last'],
+  // enforce consistent indentation
+  'jsonc/indent': ['error', 2],
+  // enforces spacing between keys and values in object literal properties
+  'jsonc/key-spacing': ['error', { beforeColon: false, afterColon: true }],
+  // disallow BigInt literals
+  'jsonc/no-bigint-literals': 'error',
+  // disallow comments
+  'jsonc/no-comments': 'error',
+  // disallow duplicate keys when creating object literals
+  'jsonc/no-dupe-keys': 'error',
+  // disallow escape sequences in identifiers.
+  'jsonc/no-escape-sequence-in-identifier': 'error',
+  // disallow use of multiline strings
+  'jsonc/no-multi-str': 'error',
+  // disallow number property keys
+  'jsonc/no-number-props': 'error',
+  // disallow use of octal escape sequences in string literals, such as var foo = 'Copyright \251';
+  'jsonc/no-octal-escape': 'error',
+  // disallow RegExp literals
+  'jsonc/no-regexp-literals': 'error',
+  // disallow sparse arrays
+  'jsonc/no-sparse-arrays': 'error',
+  // disallow template literals
+  'jsonc/no-template-literals': 'error',
+  // disallow `undefined`
+  'jsonc/no-undefined-value': 'error',
+  // disallow Unicode code point escape sequences.
+  'jsonc/no-unicode-codepoint-escapes': 'error',
+  // disallow unnecessary string escaping
+  'jsonc/no-useless-escape': 'error',
+  // enforce consistent line breaks after opening and before closing braces
+  'jsonc/object-curly-newline': ['error', { consistent: true }],
+  // enforce spaces inside braces
+  'jsonc/object-curly-spacing': ['error', 'always'],
+  // require or disallow use of quotes around object literal property names
+  'jsonc/quote-props': ['error', 'always'],
+  // specify whether double or single quotes should be used
+  'jsonc/quotes': ['error', 'double'],
+  // require or disallow spaces before/after unary operators
+  'jsonc/space-unary-ops': 'error',
+  // disallow invalid number for JSON
+  'jsonc/valid-json-number': 'error',
+  // specify the maximum length of a line in your program
+  'max-len': ['error', { code: 180, tabWidth: 2 }],
+  // require strict mode directives
+  strict: 'off',
+};
+
 module.exports = {
   root: true,
   parserOptions: {
-    ecmaVersion: 2021,
+    ecmaVersion: 'latest',
   },
   env: {
     // unnececery global builtins disabled by related rules
@@ -876,10 +952,11 @@ module.exports = {
     'es',
     'eslint-comments',
     'import',
+    'jsonc',
     'node',
     'qunit',
-    'sonarjs',
     'regexp',
+    'sonarjs',
     'unicorn',
   ],
   reportUnusedDisableDirectives: true,
@@ -971,7 +1048,6 @@ module.exports = {
         '.eslintrc.js',
         '.webpack.config.js',
         'babel.config.js',
-        'Gruntfile.js',
       ],
       rules: nodeDev,
     },
@@ -988,6 +1064,45 @@ module.exports = {
         Iterator: true,
         Observable: true,
       },
+    },
+    {
+      files: ['*.mjs'],
+      parser: '@babel/eslint-parser',
+      parserOptions: {
+        babelOptions: {
+          plugins: ['@babel/plugin-syntax-top-level-await'],
+        },
+        ecmaVersion: 2022,
+        requireConfigFile: false,
+        sourceType: 'module',
+      },
+    },
+    {
+      files: [
+        'packages/core-js-compat/src/**',
+        'scripts/**',
+      ],
+      // zx
+      globals: {
+        $: true,
+        __dirname: true,
+        __filename: true,
+        argv: true,
+        cd: true,
+        chalk: true,
+        fetch: true,
+        fs: true,
+        os: true,
+        nothrow: true,
+        question: true,
+        require: true,
+        sleep: true,
+      },
+    },
+    {
+      files: ['*.json'],
+      parser: 'jsonc-eslint-parser',
+      rules: json,
     },
   ],
 };

@@ -1,6 +1,79 @@
 ## Changelog
 ##### Unreleased
-- Nothing
+- [`Array` find from last proposal](https://github.com/tc39/proposal-array-find-from-last) moved to the stage 3, [July 2021 TC39 meeting](https://github.com/tc39/proposal-array-find-from-last/pull/47)
+- [`Array` filtering stage 1 proposal](https://github.com/tc39/proposal-array-filtering):
+  - `Array.prototype.filterReject` replaces `Array.prototype.filterOut`
+  - `%TypedArray%.prototype.filterReject` replaces `%TypedArray%.prototype.filterOut`
+- Work with symbols made stricter: some missed before case of methods that should throw error on symbols now works as they should
+- Handling `@@toPrimitive` in some cases of `ToPrimitive` internal logic made stricter
+- Fixed some cases of typed arrays subclassing logic
+- Fixed a minor bug related to string conversion in `RegExp#exec`
+- Fixed `Date.prototype.getYear` feature detection and compat data for IE8-
+- Some minor optimizations and refactoring
+- Deno:
+  - Added Deno support (sure, after bundling since Deno does not support CommonJS)
+  - Allowed `deno` target in `core-js-compat` / `core-js-builder`
+  - A bundle for Deno published on [deno.land/x/corejs](https://deno.land/x/corejs)
+- Added / updated compat data / mapping:
+  - Deno 1.0-1.13
+  - iOS Safari up to 15.0
+  - Samsung Internet up to 15.0
+  - Opera Android up to 64
+- Added `summary` option to `core-js-builder`, see more info in the [`README`](https://github.com/zloirock/core-js/blob/master/packages/core-js-builder/README.md), [#910](https://github.com/zloirock/core-js/issues/910)
+
+##### 3.15.2 - 2021.06.29
+- Worked around breakage related to `zone.js` loaded before `core-js`, [#953](https://github.com/zloirock/core-js/issues/953)
+- Added NodeJS 16.4 -> Chrome 91 compat data mapping
+
+##### 3.15.1 - 2021.06.23
+- Fixed cloning of regex through `RegExp` constructor, [#948](https://github.com/zloirock/core-js/issues/948)
+
+##### 3.15.0 - 2021.06.21
+- Added `RegExp` named capture groups polyfill, [#521](https://github.com/zloirock/core-js/issues/521), [#944](https://github.com/zloirock/core-js/issues/944)
+- Added `RegExp` `dotAll` flag polyfill, [#792](https://github.com/zloirock/core-js/issues/792), [#944](https://github.com/zloirock/core-js/issues/944)
+- Added missed polyfills of [Annex B](https://tc39.es/ecma262/#sec-additional-built-in-properties) features (required mainly for some non-browser engines), [#336](https://github.com/zloirock/core-js/issues/336), [#945](https://github.com/zloirock/core-js/issues/945):
+  - `escape`
+  - `unescape`
+  - `String.prototype.substr`
+  - `Date.prototype.getYear`
+  - `Date.prototype.setYear`
+  - `Date.prototype.toGMTString`
+- Fixed detection of forbidden host code points in `URL` polyfill
+- Allowed `rhino` target in `core-js-compat` / `core-js-builder`, added compat data for `rhino` 1.7.13, [#942](https://github.com/zloirock/core-js/issues/942), thanks [@gausie](https://github.com/gausie)
+- `.at` marked as supported from FF90
+
+##### 3.14.0 - 2021.06.05
+- Added polyfill of stable sort in `{ Array, %TypedArray% }.prototype.sort`, [#769](https://github.com/zloirock/core-js/issues/769), [#941](https://github.com/zloirock/core-js/issues/941)
+- Fixed `Safari` 14.0- `%TypedArray%.prototype.sort` validation of arguments bug
+- `.at` marked as supported from V8 9.2
+
+##### 3.13.1 - 2021.05.29
+- Overwrites `get-own-property-symbols` third-party `Symbol` polyfill if it's used since it causes a stack overflow, [#774](https://github.com/zloirock/core-js/issues/774)
+- Added a workaround of possible browser crash on `Object.prototype` accessors methods in WebKit ~ Android 4.0, [#232](https://github.com/zloirock/core-js/issues/232)
+
+##### 3.13.0 - 2021.05.26
+- Accessible `Object#hasOwnProperty` (`Object.hasOwn`) proposal moved to the stage 3, [May 2021 TC39 meeting](https://github.com/babel/proposals/issues/74#issuecomment-848121673)
+
+##### 3.12.1 - 2021.05.09
+- Fixed some cases of `Function#toString` with multiple `core-js` instances
+- Fixed some possible `String#split` polyfill problems in V8 5.1
+
+##### 3.12.0 - 2021.05.06
+- Added well-known symbol `Symbol.metadata` for [decorators stage 2 proposal](https://github.com/tc39/proposal-decorators)
+- Added well-known symbol `Symbol.matcher` for [pattern matching stage 1 proposal](https://github.com/tc39/proposal-pattern-matching)
+- Fixed regression of V8 ~ Node 0.12 `String(Symbol())` bug, [#933](https://github.com/zloirock/core-js/issues/933)  
+
+##### 3.11.3 - 2021.05.05
+- Native promise-based APIs `Promise#{ catch, finally }` returns polyfilled `Promise` instances when it's required
+
+##### 3.11.2 - 2021.05.03
+- Added a workaround of WebKit ~ iOS 10.3 Safari `Promise` bug, [#932](https://github.com/zloirock/core-js/issues/932)
+- `Promise#then` of incorrect native `Promise` implementations with correct subclassing no longer wrapped
+- Changed the order of `Promise` feature detection, removed unhandled rejection tracking check in non-browser non-node platforms
+
+##### 3.11.1 - 2021.04.28
+- Made `instanceof Promise` and `.constructor === Promise` work with polyfilled `Promise` for all native promise-based APIs
+- Added a workaround for some buggy V8 versions \~4.5 related to fixing of `%TypedArray%` static methods, [#564](https://github.com/zloirock/core-js/issues/564)
 
 ##### 3.11.0 - 2021.04.22
 - Added [accessible `Object#hasOwnProperty` stage 2 proposal](https://github.com/tc39/proposal-accessible-object-hasownproperty)

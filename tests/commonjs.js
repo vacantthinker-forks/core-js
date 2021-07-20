@@ -55,7 +55,6 @@ for (PATH of ['core-js-pure', 'core-js']) {
   }, 1, 2)(3) === 6);
   load('features/function/name');
   load('features/function/has-instance');
-  ok(Function[load('features/symbol/has-instance')](it => it));
   ok('bind' in load('features/function'));
   ok(load('features/array/is-array')([]));
   ok(typeof load('features/array/is-template-object') === 'function');
@@ -69,6 +68,7 @@ for (PATH of ['core-js-pure', 'core-js']) {
   ok(typeof load('features/array/map') === 'function');
   ok(typeof load('features/array/filter') === 'function');
   ok(typeof load('features/array/filter-out') === 'function');
+  ok(typeof load('features/array/filter-reject') === 'function');
   ok(typeof load('features/array/flat') === 'function');
   ok(typeof load('features/array/flat-map') === 'function');
   ok(typeof load('features/array/some') === 'function');
@@ -103,6 +103,7 @@ for (PATH of ['core-js-pure', 'core-js']) {
   ok(typeof load('features/array/virtual/map') === 'function');
   ok(typeof load('features/array/virtual/filter') === 'function');
   ok(typeof load('features/array/virtual/filter-out') === 'function');
+  ok(typeof load('features/array/virtual/filter-reject') === 'function');
   ok(typeof load('features/array/virtual/flat') === 'function');
   ok(typeof load('features/array/virtual/flat-map') === 'function');
   ok(typeof load('features/array/virtual/some') === 'function');
@@ -298,7 +299,9 @@ for (PATH of ['core-js-pure', 'core-js']) {
   ok(load('features/symbol/is-concat-spreadable'));
   ok(load('features/symbol/iterator'));
   ok(load('features/symbol/match'));
+  ok(load('features/symbol/matcher'));
   ok(load('features/symbol/match-all'));
+  ok(load('features/symbol/metadata'));
   ok(load('features/symbol/replace'));
   ok(load('features/symbol/search'));
   ok(load('features/symbol/species'));
@@ -972,6 +975,7 @@ for (PATH of ['core-js-pure', 'core-js']) {
   load('proposals/array-unique');
   load('proposals/collection-methods');
   load('proposals/collection-of-from');
+  load('proposals/decorators');
   load('proposals/efficient-64-bit-arithmetic');
   load('proposals/global-this');
   load('proposals/iterator-helpers');
@@ -1171,6 +1175,12 @@ for (PATH of ['core-js-pure', 'core-js']) {
   ok(instanceFilterOut({}) === undefined);
   ok(typeof instanceFilterOut([]) === 'function');
   ok(instanceFilterOut([]).call([1, 2, 3], it => it % 2).length === 1);
+
+  const instanceFilterReject = load('features/instance/filter-reject');
+  ok(typeof instanceFilterReject === 'function');
+  ok(instanceFilterReject({}) === undefined);
+  ok(typeof instanceFilterReject([]) === 'function');
+  ok(instanceFilterReject([]).call([1, 2, 3], it => it % 2).length === 1);
 
   let instanceFindIndex = load('features/instance/find-index');
   ok(typeof instanceFindIndex === 'function');
@@ -1658,6 +1668,19 @@ for (PATH of ['core-js-pure', 'core-js']) {
   ok(typeof instanceValues([]) === 'function');
   ok(instanceValues([]).call([1, 2, 3]).next().value === 1);
 
+  for (const key of ['es', 'stable', 'features']) {
+    const date = new Date();
+    ok(load(`${ key }/date/get-year`)(date) === date.getFullYear() - 1900);
+    load(`${ key }/date/set-year`)(date, 1);
+    ok(date.getFullYear() === 1901);
+    ok(load(`${ key }/date/to-gmt-string`)(date) === date.toUTCString());
+    ok(typeof load(`${ key }/regexp/dot-all`) === 'function');
+    ok(load(`${ key }/string/substr`)('12345', 1, 3) === '234');
+    ok(load(`${ key }/string/virtual/substr`).call('12345', 1, 3) === '234');
+    ok(load(`${ key }/escape`)('!q2ф') === '%21q2%u0444');
+    ok(load(`${ key }/unescape`)('%21q2%u0444') === '!q2ф');
+  }
+
   for (const key in compat) load(`modules/${ key }`);
 }
 
@@ -1686,6 +1709,7 @@ load('features/typed-array/every');
 load('features/typed-array/fill');
 load('features/typed-array/filter');
 load('features/typed-array/filter-out');
+load('features/typed-array/filter-reject');
 load('features/typed-array/find');
 load('features/typed-array/find-index');
 load('features/typed-array/find-last');

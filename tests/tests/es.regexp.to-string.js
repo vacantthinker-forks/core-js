@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/better-regex, regexp/sort-flags, regexp/no-useless-flag -- required for testing */
+/* eslint-disable regexp/sort-flags, regexp/no-useless-flag -- required for testing */
 import { STRICT } from '../helpers/constants';
 
 QUnit.test('RegExp#toString', assert => {
@@ -30,4 +30,9 @@ QUnit.test('RegExp#toString', assert => {
     assert.throws(() => toString.call(null));
     assert.throws(() => toString.call(undefined));
   }
+
+  assert.throws(() => toString.call({
+    source: Symbol(),
+    flags: 'g',
+  }), 'throws on symbol');
 });

@@ -54,6 +54,7 @@ const run = assert => {
   assert.arrayEqual('.'.split(/()()/), ['.'], "'.'.split(/()()/) results in ['.']");
   assert.arrayEqual('.'.split(/(.?)(.?)/), ['', '.', '', ''], "'.'.split(/(.?)(.?)/) results in ['', '.', '', '']");
   assert.arrayEqual('.'.split(/(.??)(.??)/), ['.'], "'.'.split(/(.??)(.??)/) results in ['.']");
+  // eslint-disable-next-line regexp/optimal-quantifier-concatenation -- ignore
   assert.arrayEqual('.'.split(/(.)?(.)?/), ['', '.', undefined, ''], "'.'.split(/(.)?(.)?/) results in ['', '.', undefined, '']");
   // eslint-disable-next-line max-len -- ignore
   assert.arrayEqual('A<B>bold</B>and<CODE>coded</CODE>'.split(/<(\/)?([^<>]+)>/), ['A', undefined, 'B', 'bold', '/', 'B', 'and', undefined, 'CODE', 'coded', '/', 'CODE', ''], "'A<B>bold</B>and<CODE>coded</CODE>'.split(/<(\\/)?([^<>]+)>/) results in ['A', undefined, 'B', 'bold', '/', 'B', 'and', undefined, 'CODE', 'coded', '/', 'CODE', '']");
@@ -275,7 +276,6 @@ const run = assert => {
   assert.strictEqual(split[2], 'three', 'S15.5.4.14_A2_T2 #5');
   assert.strictEqual(split[3], 'four', 'S15.5.4.14_A2_T2 #6');
   assert.strictEqual(split[4], 'five', 'S15.5.4.14_A2_T2 #7');
-  // eslint-disable-next-line regexp/no-invisible-character -- required for testing
   split = Object('one two three four five').split(RegExp(' '), 2);
   assert.strictEqual(split.constructor, Array, 'S15.5.4.14_A2_T3 #1');
   assert.strictEqual(split.length, 2, 'S15.5.4.14_A2_T3 #2');
@@ -689,6 +689,8 @@ const run = assert => {
       assert.strictEqual(expected[i], split[i], `S15.5.4.14_A4_T24 #${ i + 3 }`);
     }
   }
+
+  assert.throws(() => ''.split.call(Symbol(), /./), 'throws on symbol context');
 };
 
 QUnit.test('String#split regression', run);
